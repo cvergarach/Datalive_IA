@@ -142,7 +142,24 @@ router.post('/login', async (req, res) => {
         }
 
         // Verificar contraseña
+        log.debug('Verificando contraseña', {
+            module: 'auth',
+            email,
+            userId: user.id,
+            passwordLength: password.length,
+            hashLength: user.password_hash?.length,
+            hashPrefix: user.password_hash?.substring(0, 10)
+        });
+
         const validPassword = await bcrypt.compare(password, user.password_hash);
+
+        log.debug('Resultado de verificación', {
+            module: 'auth',
+            email,
+            userId: user.id,
+            validPassword
+        });
+
         if (!validPassword) {
             log.warn('Login fallido: contraseña incorrecta', {
                 module: 'auth',
