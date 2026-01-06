@@ -70,7 +70,7 @@ SUPABASE_ANON_KEY=<tu-anon-key>
 SUPABASE_SERVICE_KEY=<tu-service-key>
 GOOGLE_API_KEY=<tu-google-api-key>
 ANTHROPIC_API_KEY=<tu-anthropic-api-key>
-JWT_SECRET=<genera-un-secret-aleatorio>
+ 
 FRONTEND_URL=https://tu-app.vercel.app
 ```
 
