@@ -15,6 +15,7 @@ import aiRoutes from './routes/ai.routes.js';
 import logsRoutes from './routes/logs.routes.js';
 import executionRoutes from './routes/execution.routes.js';
 import modelsRoutes from './routes/models.routes.js';
+import utilsRoutes from './routes/utils.routes.js';
 
 // Cargar variables de entorno
 dotenv.config();
@@ -104,6 +105,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/logs', logsRoutes);
 app.use('/api/execution', executionRoutes);
 app.use('/api', modelsRoutes);
+app.use('/api/utils', utilsRoutes); // Temporal para generar hashes
 
 // Ruta 404
 app.use((req, res) => {
