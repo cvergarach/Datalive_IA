@@ -46,4 +46,49 @@ router.post('/verify-hash', async (req, res) => {
     }
 });
 
+// ENDPOINT TEMPORAL: Resetear contraseña del admin
+router.post('/reset-admin', async (req, res) => {
+    try {
+        const { newPassword } = req.body;
+
+        if (!newPassword) {
+            return res.status(400).json({ error: 'newPassword requerido' });
+        }
+
+        const { createClient } = await import('@supabase/supabase-js');
+        const bcryptModule = await import('bcrypt');
+
+        const hash = await bcryptModule.default.hash(newPassword, 10);
+
+        // Actualizar directamente en Supabase
+        const supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_KEY
+        );
+
+        const { data, error } = await supabase
+            .from('users')
+            .update({ password_hash: hash })
+            .eq('email', 'admin@datalive.com')
+            .select()
+            .single();
+
+        if (error) {
+            return res.status(500).json({ error: error.message });
+        }
+
+        res.json({
+            message: 'Contraseña actualizada exitosamente',
+            newPassword,
+            hash,
+            user: {
+                id: data.id,
+                email: data.email
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 export default router;
