@@ -39,8 +39,28 @@ const PORT = process.env.PORT || 3001;
 
 // CORS
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true
+    origin: function (origin, callback) {
+        // Permitir requests sin origin (como Postman) en desarrollo
+        if (!origin) return callback(null, true);
+
+        const allowedOrigins = [
+            'http://localhost:3000',
+            'https://datalive-ia-gdpd.vercel.app',
+            'https://datalive-ia-gdpd-kxrzlzufr-cesar-s-projects-548085a2.vercel.app',
+            process.env.FRONTEND_URL
+        ].filter(Boolean).map(url => url.replace(/\/$/, '')); // Remover barras finales
+
+        const originWithoutSlash = origin.replace(/\/$/, '');
+
+        if (allowedOrigins.includes(originWithoutSlash)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Body parser
