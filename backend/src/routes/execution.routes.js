@@ -2,8 +2,6 @@ import express from 'express';
 import { createClient } from '@supabase/supabase-js';
 import { log } from '../utils/logger.js';
 import { authenticateToken } from '../middleware/auth.middleware.js';
-import { detectAuthenticationMethod, saveCredentials } from '../services/ai/auth-detector.service.js';
-import { executeEndpoint, executeAllEndpoints } from '../services/ai/api-executor.service.js';
 
 const router = express.Router();
 
@@ -13,195 +11,68 @@ const supabase = createClient(
 );
 
 // ============================================
-// POST /api/execution/detect-auth/:apiId
-// Detectar método de autenticación
+// GET /api/execution/history - Obtener historial de ejecuciones
 // ============================================
-router.post('/detect-auth/:apiId', authenticateToken, async (req, res) => {
+router.get('/history', authenticateToken, async (req, res) => {
     try {
-        const { apiId } = req.params;
+        const { projectId, apiId } = req.query;
 
-        log.info('Detectando autenticación', {
-            module: 'execution',
-            userId: req.user.id,
-            apiId
-        });
-
-        // Obtener API y documento
-        const { data: api } = await supabase
-            .from('apis')
-            .select('*, documents(*), projects!inner(user_id)')
-            .eq('id', apiId)
-            .single();
-
-        if (!api || api.projects.user_id !== req.user.id) {
-            return res.status(404).json({ error: 'API no encontrada' });
+        if (!projectId && !apiId) {
+            return res.status(400).json({ error: 'projectId o apiId es requerido' });
         }
 
-        // Obtener texto del documento
-        const documentText = api.documents?.analysis_result || '';
+        let query = supabase
+            .from('executions')
+            .select('*, apis!inner(project_id, projects!inner(user_id))')
+            .order('created_at', { ascending: false })
+            .limit(50);
 
-        const authDetails = await detectAuthenticationMethod(
-            apiId,
-            JSON.stringify(documentText),
-            req.user.id
+        if (apiId) {
+            query = query.eq('api_id', apiId);
+        }
+
+        if (projectId) {
+            query = query.eq('apis.project_id', projectId);
+        }
+
+        const { data: executions, error } = await query;
+
+        if (error) {
+            log.error('Error al obtener historial de ejecuciones', error, {
+                module: 'execution',
+                userId: req.user.id
+            });
+            return res.status(500).json({ error: 'Error al obtener historial' });
+        }
+
+        // Filtrar solo las ejecuciones del usuario
+        const userExecutions = executions.filter(
+            exec => exec.apis?.projects?.user_id === req.user.id
         );
 
-        res.json(authDetails);
+        res.json(userExecutions);
     } catch (error) {
-        log.error('Error al detectar autenticación', error, {
+        log.error('Error en historial de ejecuciones', error, {
             module: 'execution',
             userId: req.user.id
         });
-        res.status(500).json({ error: 'Error al detectar autenticación' });
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
 
 // ============================================
-// POST /api/execution/save-credentials/:apiId
-// Guardar credenciales del usuario
+// POST /api/execution/execute - Ejecutar endpoint
 // ============================================
-router.post('/save-credentials/:apiId', authenticateToken, async (req, res) => {
+router.post('/execute', authenticateToken, async (req, res) => {
     try {
-        const { apiId } = req.params;
-        const { credentials } = req.body;
-
-        log.info('Guardando credenciales', {
-            module: 'execution',
-            userId: req.user.id,
-            apiId
-        });
-
-        // Verificar que la API pertenece al usuario
-        const { data: api } = await supabase
-            .from('apis')
-            .select('*, projects!inner(user_id)')
-            .eq('id', apiId)
-            .single();
-
-        if (!api || api.projects.user_id !== req.user.id) {
-            return res.status(404).json({ error: 'API no encontrada' });
-        }
-
-        await saveCredentials(apiId, credentials, req.user.id);
-
-        res.json({ message: 'Credenciales guardadas exitosamente' });
-    } catch (error) {
-        log.error('Error al guardar credenciales', error, {
-            module: 'execution',
-            userId: req.user.id
-        });
-        res.status(500).json({ error: 'Error al guardar credenciales' });
-    }
-});
-
-// ============================================
-// POST /api/execution/execute/:apiId/:endpointIndex
-// Ejecutar un endpoint específico
-// ============================================
-router.post('/execute/:apiId/:endpointIndex', authenticateToken, async (req, res) => {
-    try {
-        const { apiId, endpointIndex } = req.params;
-        const { params: userParams } = req.body;
+        const { apiId, endpoint, method, params } = req.body;
 
         log.info('Ejecutando endpoint', {
             module: 'execution',
             userId: req.user.id,
             apiId,
-            endpointIndex
-        });
-
-        // Obtener API
-        const { data: api } = await supabase
-            .from('apis')
-            .select('*, projects!inner(user_id, id)')
-            .eq('id', apiId)
-            .single();
-
-        if (!api || api.projects.user_id !== req.user.id) {
-            return res.status(404).json({ error: 'API no encontrada' });
-        }
-
-        const endpoint = api.endpoints[parseInt(endpointIndex)];
-        if (!endpoint) {
-            return res.status(404).json({ error: 'Endpoint no encontrado' });
-        }
-
-        const result = await executeEndpoint(
-            apiId,
             endpoint,
-            userParams || {},
-            req.user.id,
-            api.projects.id
-        );
-
-        res.json(result);
-    } catch (error) {
-        log.error('Error al ejecutar endpoint', error, {
-            module: 'execution',
-            userId: req.user.id
-        });
-        res.status(500).json({ error: error.message || 'Error al ejecutar endpoint' });
-    }
-});
-
-// ============================================
-// POST /api/execution/execute-all/:apiId
-// Ejecutar TODOS los endpoints automáticamente
-// ============================================
-router.post('/execute-all/:apiId', authenticateToken, async (req, res) => {
-    try {
-        const { apiId } = req.params;
-
-        log.info('Ejecutando todos los endpoints', {
-            module: 'execution',
-            userId: req.user.id,
-            apiId
-        });
-
-        // Obtener API
-        const { data: api } = await supabase
-            .from('apis')
-            .select('*, projects!inner(user_id, id)')
-            .eq('id', apiId)
-            .single();
-
-        if (!api || api.projects.user_id !== req.user.id) {
-            return res.status(404).json({ error: 'API no encontrada' });
-        }
-
-        const results = await executeAllEndpoints(
-            apiId,
-            req.user.id,
-            api.projects.id
-        );
-
-        res.json({
-            total: results.length,
-            successful: results.filter(r => r.success).length,
-            failed: results.filter(r => !r.success).length,
-            results
-        });
-    } catch (error) {
-        log.error('Error al ejecutar todos los endpoints', error, {
-            module: 'execution',
-            userId: req.user.id
-        });
-        res.status(500).json({ error: 'Error al ejecutar endpoints' });
-    }
-});
-
-// ============================================
-// GET /api/execution/history/:apiId
-// Obtener historial de ejecuciones
-// ============================================
-router.get('/history/:apiId', authenticateToken, async (req, res) => {
-    try {
-        const { apiId } = req.params;
-
-        log.debug('Obteniendo historial de ejecuciones', {
-            module: 'execution',
-            userId: req.user.id,
-            apiId
+            method
         });
 
         // Verificar que la API pertenece al usuario
@@ -215,22 +86,108 @@ router.get('/history/:apiId', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'API no encontrada' });
         }
 
-        const { data: executions, error } = await supabase
+        // Crear registro de ejecución
+        const executionData = {
+            api_id: apiId,
+            endpoint,
+            method,
+            request_params: params || {},
+            status: 'pending'
+        };
+
+        const { data: execution, error } = await supabase
             .from('executions')
-            .select('*')
-            .eq('api_id', apiId)
-            .order('created_at', { ascending: false })
-            .limit(50);
+            .insert(executionData)
+            .select()
+            .single();
 
-        if (error) throw error;
+        if (error) {
+            log.error('Error al crear ejecución', error, {
+                module: 'execution',
+                userId: req.user.id
+            });
+            return res.status(500).json({ error: 'Error al crear ejecución' });
+        }
 
-        res.json(executions);
+        // Aquí iría la lógica real de ejecución del endpoint
+        // Por ahora retornamos la ejecución pendiente
+        res.status(201).json(execution);
     } catch (error) {
-        log.error('Error al obtener historial', error, {
+        log.error('Error en ejecución de endpoint', error, {
             module: 'execution',
             userId: req.user.id
         });
-        res.status(500).json({ error: 'Error al obtener historial' });
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// ============================================
+// POST /api/execution/execute-all - Ejecutar todos los endpoints
+// ============================================
+router.post('/execute-all', authenticateToken, async (req, res) => {
+    try {
+        const { projectId } = req.body;
+
+        log.info('Ejecutando todos los endpoints del proyecto', {
+            module: 'execution',
+            userId: req.user.id,
+            projectId
+        });
+
+        // Verificar que el proyecto pertenece al usuario
+        const { data: project } = await supabase
+            .from('projects')
+            .select('id')
+            .eq('id', projectId)
+            .eq('user_id', req.user.id)
+            .single();
+
+        if (!project) {
+            return res.status(404).json({ error: 'Proyecto no encontrado' });
+        }
+
+        // Obtener todas las APIs del proyecto
+        const { data: apis } = await supabase
+            .from('apis')
+            .select('*')
+            .eq('project_id', projectId);
+
+        if (!apis || apis.length === 0) {
+            return res.status(404).json({ error: 'No hay APIs para ejecutar' });
+        }
+
+        // Crear ejecuciones para cada endpoint
+        const executions = [];
+        for (const api of apis) {
+            if (api.endpoints && Array.isArray(api.endpoints)) {
+                for (const endpoint of api.endpoints) {
+                    const executionData = {
+                        api_id: api.id,
+                        endpoint: endpoint.path,
+                        method: endpoint.method,
+                        status: 'pending'
+                    };
+                    executions.push(executionData);
+                }
+            }
+        }
+
+        if (executions.length > 0) {
+            await supabase
+                .from('executions')
+                .insert(executions);
+        }
+
+        res.json({
+            message: `${executions.length} ejecuciones iniciadas`,
+            count: executions.length
+        });
+    } catch (error) {
+        log.error('Error en ejecución masiva', error, {
+            module: 'execution',
+            userId: req.user.id
+        });
+        res.status(500).json({ error: 'Error interno del servidor' });
     }
 });
 

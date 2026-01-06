@@ -26,14 +26,13 @@ const upload = multer({
 // ============================================
 router.post('/upload', authenticateToken, upload.single('file'), async (req, res) => {
     try {
-        const { projectId, type, url } = req.body;
+        const { projectId } = req.body;
         const file = req.file;
 
         log.info('Subiendo documento', {
             module: 'documents',
             userId: req.user.id,
             projectId,
-            type,
             fileName: file?.originalname
         });
 
@@ -54,48 +53,41 @@ router.post('/upload', authenticateToken, upload.single('file'), async (req, res
             return res.status(404).json({ error: 'Proyecto no encontrado' });
         }
 
-        let documentData = {
+        if (!file) {
+            return res.status(400).json({ error: 'No se proporcionó archivo' });
+        }
+
+        // Subir archivo a Supabase Storage
+        const fileName = `${projectId}/${Date.now()}_${file.originalname}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('documents')
+            .upload(fileName, file.buffer, {
+                contentType: file.mimetype
+            });
+
+        if (uploadError) {
+            log.error('Error al subir archivo a storage', uploadError, {
+                module: 'documents',
+                userId: req.user.id,
+                projectId
+            });
+            return res.status(500).json({ error: 'Error al subir archivo' });
+        }
+
+        // Extraer texto del PDF
+        const pdfData = await pdfParse(file.buffer);
+        const textContent = pdfData.text;
+
+        // Crear registro en BD
+        const documentData = {
             project_id: projectId,
-            type,
+            name: file.originalname,
+            type: 'pdf',
+            storage_path: fileName,
+            file_size: file.size,
             status: 'analyzing'
         };
 
-        let textContent = '';
-
-        // Procesar según tipo
-        if (type === 'pdf' && file) {
-            // Subir archivo a Supabase Storage
-            const fileName = `${projectId}/${Date.now()}_${file.originalname}`;
-            const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('documents')
-                .upload(fileName, file.buffer, {
-                    contentType: file.mimetype
-                });
-
-            if (uploadError) {
-                log.error('Error al subir archivo a storage', uploadError, {
-                    module: 'documents',
-                    userId: req.user.id,
-                    projectId
-                });
-                return res.status(500).json({ error: 'Error al subir archivo' });
-            }
-
-            // Extraer texto del PDF
-            const pdfData = await pdfParse(file.buffer);
-            textContent = pdfData.text;
-
-            documentData.name = file.originalname;
-            documentData.storage_path = fileName;
-            documentData.file_size = file.size;
-        } else if (type === 'url' && url) {
-            // Para URLs, se podría hacer scraping aquí
-            documentData.name = url;
-            documentData.url = url;
-            textContent = `URL: ${url}`; // Placeholder, implementar scraping real
-        }
-
-        // Crear registro en BD
         const { data: document, error: dbError } = await supabase
             .from('documents')
             .insert(documentData)
@@ -132,6 +124,120 @@ router.post('/upload', authenticateToken, upload.single('file'), async (req, res
         res.status(201).json(document);
     } catch (error) {
         log.error('Error en carga de documento', error, {
+            module: 'documents',
+            userId: req.user.id
+        });
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// ============================================
+// POST /api/documents/url - Agregar URL
+// ============================================
+router.post('/url', authenticateToken, async (req, res) => {
+    try {
+        const { projectId, url } = req.body;
+
+        log.info('Agregando URL', {
+            module: 'documents',
+            userId: req.user.id,
+            projectId,
+            url
+        });
+
+        // Verificar que el proyecto pertenece al usuario
+        const { data: project } = await supabase
+            .from('projects')
+            .select('id')
+            .eq('id', projectId)
+            .eq('user_id', req.user.id)
+            .single();
+
+        if (!project) {
+            return res.status(404).json({ error: 'Proyecto no encontrado' });
+        }
+
+        // Crear registro en BD
+        const documentData = {
+            project_id: projectId,
+            name: url,
+            type: 'url',
+            url: url,
+            status: 'analyzing'
+        };
+
+        const { data: document, error: dbError } = await supabase
+            .from('documents')
+            .insert(documentData)
+            .select()
+            .single();
+
+        if (dbError) {
+            log.error('Error al crear registro de URL', dbError, {
+                module: 'documents',
+                userId: req.user.id,
+                projectId
+            });
+            return res.status(500).json({ error: 'Error al crear documento' });
+        }
+
+        res.status(201).json(document);
+    } catch (error) {
+        log.error('Error al agregar URL', error, {
+            module: 'documents',
+            userId: req.user.id
+        });
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// ============================================
+// GET /api/documents - Listar documentos (con query param)
+// ============================================
+router.get('/', authenticateToken, async (req, res) => {
+    try {
+        const { projectId } = req.query;
+
+        if (!projectId) {
+            return res.status(400).json({ error: 'projectId es requerido' });
+        }
+
+        log.debug('Listando documentos', {
+            module: 'documents',
+            userId: req.user.id,
+            projectId
+        });
+
+        // Verificar que el proyecto pertenece al usuario
+        const { data: project } = await supabase
+            .from('projects')
+            .select('id')
+            .eq('id', projectId)
+            .eq('user_id', req.user.id)
+            .single();
+
+        if (!project) {
+            return res.status(404).json({ error: 'Proyecto no encontrado' });
+        }
+
+        const { data: documents, error } = await supabase
+            .from('documents')
+            .select('*')
+            .eq('project_id', projectId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            log.error('Error al listar documentos', error, {
+                module: 'documents',
+                userId: req.user.id,
+                projectId
+            });
+            return res.status(500).json({ error: 'Error al obtener documentos' });
+        }
+
+        res.json(documents);
+    } catch (error) {
+        log.error('Error en listado de documentos', error, {
             module: 'documents',
             userId: req.user.id
         });

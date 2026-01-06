@@ -242,4 +242,93 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// ============================================
+// GET /api/projects/:id/apis - Obtener APIs del proyecto
+// ============================================
+router.get('/:id/apis', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Verificar que el proyecto pertenece al usuario
+        const { data: project } = await supabase
+            .from('projects')
+            .select('id')
+            .eq('id', id)
+            .eq('user_id', req.user.id)
+            .single();
+
+        if (!project) {
+            return res.status(404).json({ error: 'Proyecto no encontrado' });
+        }
+
+        const { data: apis, error } = await supabase
+            .from('apis')
+            .select('*')
+            .eq('project_id', id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            log.error('Error al obtener APIs', error, {
+                module: 'projects',
+                userId: req.user.id,
+                projectId: id
+            });
+            return res.status(500).json({ error: 'Error al obtener APIs' });
+        }
+
+        res.json(apis);
+    } catch (error) {
+        log.error('Error al obtener APIs del proyecto', error, {
+            module: 'projects',
+            userId: req.user.id
+        });
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+// ============================================
+// GET /api/projects/:id/insights - Obtener insights del proyecto
+// ============================================
+router.get('/:id/insights', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Verificar que el proyecto pertenece al usuario
+        const { data: project } = await supabase
+            .from('projects')
+            .select('id')
+            .eq('id', id)
+            .eq('user_id', req.user.id)
+            .single();
+
+        if (!project) {
+            return res.status(404).json({ error: 'Proyecto no encontrado' });
+        }
+
+        const { data: insights, error } = await supabase
+            .from('insights')
+            .select('*')
+            .eq('project_id', id)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            log.error('Error al obtener insights', error, {
+                module: 'projects',
+                userId: req.user.id,
+                projectId: id
+            });
+            return res.status(500).json({ error: 'Error al obtener insights' });
+        }
+
+        res.json(insights);
+    } catch (error) {
+        log.error('Error al obtener insights del proyecto', error, {
+            module: 'projects',
+            userId: req.user.id
+        });
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
 export default router;
+
