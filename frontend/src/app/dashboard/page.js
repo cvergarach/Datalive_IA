@@ -1,11 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import api from '@/lib/api'
-import { useAuthStore } from '@/store/authStore'
 
 export default function DashboardPage() {
-    const { user } = useAuthStore()
+    const [user, setUser] = useState(null)
     const [stats, setStats] = useState({
         projects: 0,
         apis: 0,
@@ -13,24 +11,22 @@ export default function DashboardPage() {
     })
 
     useEffect(() => {
-        loadStats()
-    }, [])
-
-    const loadStats = async () => {
-        try {
-            const { data: projects } = await api.get('/api/projects')
-            setStats(prev => ({ ...prev, projects: projects.length }))
-        } catch (error) {
-            console.error('Error loading stats:', error)
+        // Cargar usuario del localStorage solo en el cliente
+        if (typeof window !== 'undefined') {
+            const authStorage = localStorage.getItem('auth-storage')
+            if (authStorage) {
+                const { state } = JSON.parse(authStorage)
+                setUser(state.user)
+            }
         }
-    }
+    }, [])
 
     return (
         <div className="space-y-8">
             {/* Header */}
             <div>
                 <h1 className="text-4xl font-bold text-white">
-                    Bienvenido, {user?.fullName || 'Usuario'}
+                    Bienvenido, {user?.name || 'Usuario'}
                 </h1>
                 <p className="text-gray-400 mt-2">
                     Panel de control de DataLIVE
