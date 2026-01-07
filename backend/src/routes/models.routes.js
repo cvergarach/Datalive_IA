@@ -185,7 +185,7 @@ router.put('/agents/config/:agentName', authenticateToken, async (req, res) => {
 // ============================================
 // GET /api/models/preferences - Obtener preferencias
 // ============================================
-router.get('/preferences', authenticateToken, async (req, res) => {
+router.get('/models/preferences', authenticateToken, async (req, res) => {
     try {
         log.info('Obteniendo preferencias de modelo', {
             module: 'models',
@@ -217,7 +217,7 @@ router.get('/preferences', authenticateToken, async (req, res) => {
 // ============================================
 // POST /api/models/preferences - Guardar preferencias
 // ============================================
-router.post('/preferences', authenticateToken, async (req, res) => {
+router.post('/models/preferences', authenticateToken, async (req, res) => {
     try {
         const { default_model } = req.body;
 
