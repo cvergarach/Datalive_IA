@@ -72,10 +72,10 @@ export default function InsightsTab({ projectId }) {
                         {/* Header */}
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
-                                <span className="text-4xl">{getCategoryIcon(insight.category)}</span>
+                                <span className="text-3xl">{getCategoryIcon(insight.category)}</span>
                                 <div>
-                                    <h3 className="text-xl font-bold text-white">{insight.title}</h3>
-                                    <p className="text-gray-400 text-sm mt-1">{insight.description}</p>
+                                    <h3 className="text-lg font-semibold text-gray-900">{insight.title}</h3>
+                                    <p className="text-gray-600 text-sm mt-1">{insight.description}</p>
                                 </div>
                             </div>
                             <Badge variant={getPriorityColor(insight.priority)}>
@@ -85,16 +85,16 @@ export default function InsightsTab({ projectId }) {
 
                         {/* Data */}
                         {insight.data && (
-                            <div className="p-4 bg-white/5 rounded-lg">
-                                <pre className="text-sm text-gray-300 overflow-x-auto">
+                            <div className="p-4 bg-gray-50 rounded-lg overflow-x-auto">
+                                <pre className="text-sm text-gray-700">
                                     {JSON.stringify(insight.data, null, 2)}
                                 </pre>
                             </div>
                         )}
 
                         {/* Footer */}
-                        <div className="flex items-center justify-between text-sm text-gray-500 pt-3 border-t border-white/10">
-                            <span>{insight.category}</span>
+                        <div className="flex items-center justify-between text-sm text-gray-500 pt-3 border-t border-gray-200">
+                            <span className="capitalize">{insight.category}</span>
                             <span>{new Date(insight.created_at).toLocaleDateString('es-ES')}</span>
                         </div>
                     </div>

@@ -1,4 +1,4 @@
-// Componente EmptyState reutilizable
+// Componente EmptyState reutilizable - Tema Corporativo
 import Button from './Button';
 
 export default function EmptyState({
@@ -9,16 +9,16 @@ export default function EmptyState({
     actionLabel
 }) {
     return (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
             {icon && (
-                <div className="text-6xl mb-4 opacity-50">
+                <div className="text-5xl mb-4">
                     {icon}
                 </div>
             )}
-            <h3 className="text-xl font-semibold text-white mb-2">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 {title}
             </h3>
-            <p className="text-gray-400 mb-6 max-w-md">
+            <p className="text-gray-600 mb-6 max-w-md text-sm">
                 {description}
             </p>
             {action && actionLabel && (

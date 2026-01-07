@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { useDropzone } from 'react-dropzone';
 import api from '@/lib/api';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -17,6 +16,7 @@ export default function DocumentsTab({ projectId }) {
     const [uploading, setUploading] = useState(false);
     const [url, setUrl] = useState('');
     const [addingUrl, setAddingUrl] = useState(false);
+    const [dragActive, setDragActive] = useState(false);
 
     useEffect(() => {
         fetchDocuments();
@@ -33,10 +33,24 @@ export default function DocumentsTab({ projectId }) {
         }
     };
 
-    const onDrop = async (acceptedFiles) => {
-        const file = acceptedFiles[0];
+    const handleDrop = async (e) => {
+        e.preventDefault();
+        setDragActive(false);
+
+        const file = e.dataTransfer?.files[0];
         if (!file) return;
 
+        await uploadFile(file);
+    };
+
+    const handleFileSelect = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        await uploadFile(file);
+    };
+
+    const uploadFile = async (file) => {
         if (file.type !== 'application/pdf') {
             toast.error('Solo se permiten archivos PDF');
             return;
@@ -52,20 +66,13 @@ export default function DocumentsTab({ projectId }) {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             toast.success('Documento subido exitosamente');
-            setDocuments([...documents, data]);
+            setDocuments([data, ...documents]);
         } catch (error) {
             // Error manejado por interceptor
         } finally {
             setUploading(false);
         }
     };
-
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: { 'application/pdf': ['.pdf'] },
-        multiple: false,
-        disabled: uploading
-    });
 
     const handleAddUrl = async (e) => {
         e.preventDefault();
@@ -78,7 +85,7 @@ export default function DocumentsTab({ projectId }) {
                 url: url.trim()
             });
             toast.success('URL agregada exitosamente');
-            setDocuments([...documents, data]);
+            setDocuments([data, ...documents]);
             setUrl('');
         } catch (error) {
             // Error manejado por interceptor
@@ -94,7 +101,13 @@ export default function DocumentsTab({ projectId }) {
             completed: 'success',
             failed: 'danger'
         };
-        return <Badge variant={variants[status] || 'default'}>{status}</Badge>;
+        const labels = {
+            pending: 'Pendiente',
+            analyzing: 'Analizando',
+            completed: 'Completado',
+            failed: 'Error'
+        };
+        return <Badge variant={variants[status] || 'default'}>{labels[status] || status}</Badge>;
     };
 
     if (loading) {
@@ -111,35 +124,46 @@ export default function DocumentsTab({ projectId }) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* PDF Upload */}
                 <Card>
-                    <h3 className="text-xl font-bold text-white mb-4">Subir PDF</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Subir PDF</h3>
                     <div
-                        {...getRootProps()}
+                        onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+                        onDragLeave={() => setDragActive(false)}
+                        onDrop={handleDrop}
                         className={`
                             border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
-                            ${isDragActive ? 'border-purple-500 bg-purple-500/10' : 'border-white/20 hover:border-purple-500/50'}
+                            ${dragActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-gray-400'}
                             ${uploading ? 'opacity-50 cursor-not-allowed' : ''}
                         `}
                     >
-                        <input {...getInputProps()} />
-                        {uploading ? (
-                            <LoadingSpinner size="md" text="Subiendo..." />
-                        ) : (
-                            <>
-                                <div className="text-6xl mb-4">📄</div>
-                                <p className="text-white font-medium mb-2">
-                                    {isDragActive ? 'Suelta el archivo aquí' : 'Arrastra un PDF aquí'}
-                                </p>
-                                <p className="text-gray-400 text-sm">
-                                    o haz click para seleccionar
-                                </p>
-                            </>
-                        )}
+                        <input
+                            type="file"
+                            accept=".pdf"
+                            onChange={handleFileSelect}
+                            className="hidden"
+                            id="file-upload"
+                            disabled={uploading}
+                        />
+                        <label htmlFor="file-upload" className="cursor-pointer">
+                            {uploading ? (
+                                <LoadingSpinner size="md" text="Subiendo..." />
+                            ) : (
+                                <>
+                                    <div className="text-5xl mb-3">📄</div>
+                                    <p className="text-gray-900 font-medium mb-1">
+                                        {dragActive ? 'Suelta el archivo aquí' : 'Arrastra un PDF aquí'}
+                                    </p>
+                                    <p className="text-gray-500 text-sm">
+                                        o haz click para seleccionar
+                                    </p>
+                                </>
+                            )}
+                        </label>
                     </div>
                 </Card>
 
                 {/* URL Input */}
                 <Card>
-                    <h3 className="text-xl font-bold text-white mb-4">Agregar URL</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Agregar URL</h3>
                     <form onSubmit={handleAddUrl} className="space-y-4">
                         <Input
                             type="url"
@@ -174,28 +198,23 @@ export default function DocumentsTab({ projectId }) {
                     description="Sube un PDF o agrega una URL para comenzar el análisis"
                 />
             ) : (
-                <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-3">
                     {documents.map((doc) => (
                         <Card key={doc.id} hover>
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4 flex-1">
-                                    <div className="text-4xl">
+                                    <div className="text-3xl">
                                         {doc.type === 'pdf' ? '📄' : '🔗'}
                                     </div>
-                                    <div className="flex-1">
-                                        <h4 className="text-white font-semibold">{doc.name}</h4>
-                                        <p className="text-gray-400 text-sm">
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-gray-900 font-medium truncate">{doc.name}</h4>
+                                        <p className="text-gray-500 text-sm truncate">
                                             {doc.type === 'pdf' ? `${(doc.file_size / 1024 / 1024).toFixed(2)} MB` : doc.url}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     {getStatusBadge(doc.status)}
-                                    {doc.status === 'completed' && (
-                                        <Button size="sm" variant="primary">
-                                            Ver Análisis
-                                        </Button>
-                                    )}
                                 </div>
                             </div>
                         </Card>

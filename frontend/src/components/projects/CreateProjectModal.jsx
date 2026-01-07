@@ -58,7 +58,7 @@ export default function CreateProjectModal({ isOpen, onClose }) {
             footer={
                 <>
                     <Button
-                        variant="ghost"
+                        variant="secondary"
                         onClick={handleClose}
                         disabled={loading}
                     >
@@ -87,7 +87,7 @@ export default function CreateProjectModal({ isOpen, onClose }) {
                 />
 
                 <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-300">
+                    <label className="text-sm font-medium text-gray-700">
                         Descripción
                     </label>
                     <textarea
@@ -96,22 +96,22 @@ export default function CreateProjectModal({ isOpen, onClose }) {
                         placeholder="Describe brevemente el proyecto..."
                         rows={3}
                         disabled={loading}
-                        className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                        className="w-full px-4 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     />
                 </div>
 
                 <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-300">
+                    <label className="text-sm font-medium text-gray-700">
                         Industria
                     </label>
                     <select
                         value={formData.industry}
                         onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
                         disabled={loading}
-                        className="w-full px-4 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                        className="w-full px-4 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     >
                         {industries.map((industry) => (
-                            <option key={industry.value} value={industry.value} className="bg-gray-800">
+                            <option key={industry.value} value={industry.value}>
                                 {industry.label}
                             </option>
                         ))}

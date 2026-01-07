@@ -46,16 +46,16 @@ export default function APIsTab({ projectId }) {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {apis.map((apiItem) => (
                 <Card key={apiItem.id}>
                     <div className="space-y-4">
                         {/* API Header */}
                         <div className="flex items-start justify-between">
                             <div>
-                                <h3 className="text-2xl font-bold text-white">{apiItem.name}</h3>
-                                <p className="text-gray-400 mt-1">{apiItem.description}</p>
-                                <p className="text-purple-400 mt-2 font-mono text-sm">{apiItem.base_url}</p>
+                                <h3 className="text-xl font-semibold text-gray-900">{apiItem.name}</h3>
+                                <p className="text-gray-600 mt-1 text-sm">{apiItem.description}</p>
+                                <p className="text-indigo-600 mt-2 font-mono text-sm">{apiItem.base_url}</p>
                             </div>
                             <Badge variant="primary">{apiItem.auth_type || 'none'}</Badge>
                         </div>
@@ -63,14 +63,14 @@ export default function APIsTab({ projectId }) {
                         {/* Endpoints */}
                         {apiItem.endpoints && apiItem.endpoints.length > 0 && (
                             <div>
-                                <h4 className="text-lg font-semibold text-white mb-3">
+                                <h4 className="text-sm font-semibold text-gray-900 mb-3">
                                     Endpoints ({apiItem.endpoints.length})
                                 </h4>
                                 <div className="space-y-2">
                                     {apiItem.endpoints.slice(0, 5).map((endpoint, idx) => (
                                         <div
                                             key={idx}
-                                            className="flex items-center gap-3 p-3 bg-white/5 rounded-lg"
+                                            className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
                                         >
                                             <Badge
                                                 variant={
@@ -83,7 +83,7 @@ export default function APIsTab({ projectId }) {
                                             >
                                                 {endpoint.method}
                                             </Badge>
-                                            <span className="text-gray-300 font-mono text-sm flex-1">
+                                            <span className="text-gray-700 font-mono text-sm flex-1">
                                                 {endpoint.path}
                                             </span>
                                             <span className="text-gray-500 text-xs">
@@ -101,7 +101,7 @@ export default function APIsTab({ projectId }) {
                         )}
 
                         {/* Actions */}
-                        <div className="flex gap-3 pt-4 border-t border-white/10">
+                        <div className="flex gap-3 pt-4 border-t border-gray-200">
                             <Button variant="primary" size="sm">
                                 Configurar Credenciales
                             </Button>

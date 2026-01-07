@@ -44,11 +44,11 @@ export default function ProjectCard({ project, onDelete }) {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                        <div className="text-4xl">
+                        <div className="text-3xl">
                             {industryIcons[project.industry] || '📊'}
                         </div>
                         <div>
-                            <h3 className="text-xl font-bold text-white">
+                            <h3 className="text-lg font-semibold text-gray-900">
                                 {project.name}
                             </h3>
                             <Badge variant="primary" size="sm">
@@ -59,26 +59,26 @@ export default function ProjectCard({ project, onDelete }) {
                 </div>
 
                 {/* Description */}
-                <p className="text-gray-400 text-sm mb-4 flex-1 line-clamp-2">
+                <p className="text-gray-600 text-sm mb-4 flex-1 line-clamp-2">
                     {project.description || 'Sin descripción'}
                 </p>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-white/5 rounded-lg">
+                <div className="grid grid-cols-3 gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-purple-400">
+                        <div className="text-xl font-bold text-indigo-600">
                             {project._count?.documents || 0}
                         </div>
                         <div className="text-xs text-gray-500">Documentos</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-blue-400">
+                        <div className="text-xl font-bold text-blue-600">
                             {project._count?.apis || 0}
                         </div>
                         <div className="text-xs text-gray-500">APIs</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-green-400">
+                        <div className="text-xl font-bold text-green-600">
                             {project._count?.executions || 0}
                         </div>
                         <div className="text-xs text-gray-500">Ejecuciones</div>
@@ -86,7 +86,7 @@ export default function ProjectCard({ project, onDelete }) {
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                     <span className="text-xs text-gray-500">
                         Creado {formatDate(project.created_at)}
                     </span>

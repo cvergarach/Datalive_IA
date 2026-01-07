@@ -40,8 +40,8 @@ export default function ProjectsPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-4xl font-bold text-white">Proyectos</h1>
-                    <p className="text-gray-400 mt-2">
+                    <h1 className="text-2xl font-bold text-gray-900">Proyectos</h1>
+                    <p className="text-gray-600 mt-1">
                         Gestiona tus proyectos de análisis de APIs
                     </p>
                 </div>
@@ -49,7 +49,7 @@ export default function ProjectsPage() {
                     onClick={() => setIsCreateModalOpen(true)}
                     variant="primary"
                     icon={
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
                     }
@@ -66,9 +66,9 @@ export default function ProjectsPage() {
                         placeholder="Buscar proyectos..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-4 py-3 pl-12 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-4 py-2.5 pl-10 rounded-lg bg-white border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     />
-                    <svg className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>

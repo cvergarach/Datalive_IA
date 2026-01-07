@@ -55,8 +55,8 @@ export default function ExecutionTab({ projectId }) {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-2xl font-bold text-white">Ejecución de APIs</h2>
-                    <p className="text-gray-400 mt-1">
+                    <h2 className="text-lg font-semibold text-gray-900">Ejecución de APIs</h2>
+                    <p className="text-gray-600 text-sm mt-1">
                         Ejecuta endpoints y obtén insights automáticos
                     </p>
                 </div>
@@ -65,7 +65,7 @@ export default function ExecutionTab({ projectId }) {
                     onClick={handleExecuteAll}
                     loading={executing}
                     icon={
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                     }
@@ -84,7 +84,7 @@ export default function ExecutionTab({ projectId }) {
                     actionLabel="Ejecutar Ahora"
                 />
             ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {executions.map((exec) => (
                         <Card key={exec.id}>
                             <div className="space-y-3">
@@ -101,7 +101,7 @@ export default function ExecutionTab({ projectId }) {
                                         >
                                             {exec.method}
                                         </Badge>
-                                        <span className="text-white font-mono">{exec.endpoint}</span>
+                                        <span className="text-gray-900 font-mono text-sm">{exec.endpoint}</span>
                                     </div>
                                     <Badge
                                         variant={
@@ -116,8 +116,8 @@ export default function ExecutionTab({ projectId }) {
 
                                 {/* AI Explanation */}
                                 {exec.ai_explanation && (
-                                    <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-lg">
-                                        <p className="text-sm text-gray-300">{exec.ai_explanation}</p>
+                                    <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
+                                        <p className="text-sm text-gray-700">{exec.ai_explanation}</p>
                                     </div>
                                 )}
 
