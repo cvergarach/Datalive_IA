@@ -182,4 +182,79 @@ router.put('/agents/config/:agentName', authenticateToken, async (req, res) => {
     }
 });
 
+// ============================================
+// GET /api/models/preferences - Obtener preferencias
+// ============================================
+router.get('/preferences', authenticateToken, async (req, res) => {
+    try {
+        log.info('Obteniendo preferencias de modelo', {
+            module: 'models',
+            userId: req.user.id
+        });
+
+        const { data, error } = await supabase
+            .from('user_preferences')
+            .select('default_model')
+            .eq('user_id', req.user.id)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            throw error;
+        }
+
+        res.json({
+            default_model: data?.default_model || 'gemini-2.5-flash'
+        });
+    } catch (error) {
+        log.error('Error al obtener preferencias', error, {
+            module: 'models',
+            userId: req.user.id
+        });
+        res.status(500).json({ error: 'Error al obtener preferencias' });
+    }
+});
+
+// ============================================
+// POST /api/models/preferences - Guardar preferencias
+// ============================================
+router.post('/preferences', authenticateToken, async (req, res) => {
+    try {
+        const { default_model } = req.body;
+
+        log.info('Guardando preferencias de modelo', {
+            module: 'models',
+            userId: req.user.id,
+            model: default_model
+        });
+
+        const { data, error } = await supabase
+            .from('user_preferences')
+            .upsert({
+                user_id: req.user.id,
+                default_model,
+                updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'user_id'
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        log.info('Preferencias guardadas', {
+            module: 'models',
+            userId: req.user.id,
+            model: default_model
+        });
+
+        res.json(data);
+    } catch (error) {
+        log.error('Error al guardar preferencias', error, {
+            module: 'models',
+            userId: req.user.id
+        });
+        res.status(500).json({ error: 'Error al guardar preferencias' });
+    }
+});
+
 export default router;
