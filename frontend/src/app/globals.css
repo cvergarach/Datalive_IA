@@ -5,9 +5,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 15, 23, 42;
-  --background-end-rgb: 15, 23, 42;
+  --foreground-rgb: 31, 41, 55;
+  --background-rgb: 249, 250, 251;
+  --sidebar-rgb: 255, 255, 255;
+  --primary-rgb: 99, 102, 241;
 }
 
 * {
@@ -24,12 +25,7 @@ body {
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: rgb(var(--background-rgb));
   font-family: 'Inter', sans-serif;
 }
 
@@ -38,12 +34,16 @@ a {
   text-decoration: none;
 }
 
-/* Glassmorphism effect */
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+/* Card style corporativo */
+.corporate-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.corporate-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 /* Scrollbar personalizado */
@@ -53,16 +53,16 @@ a {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: #f3f4f6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.5);
+  background: #d1d5db;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.7);
+  background: #9ca3af;
 }
 
 /* Animaciones */
@@ -71,6 +71,7 @@ a {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -81,12 +82,27 @@ a {
   animation: fadeIn 0.3s ease-out;
 }
 
-/* Efectos de hover */
+/* Efectos de hover corporativos */
 .hover-lift {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+
+/* Sidebar styles */
+.sidebar-item {
+  transition: all 0.2s ease;
+}
+
+.sidebar-item:hover {
+  background: #f3f4f6;
+}
+
+.sidebar-item.active {
+  background: #eef2ff;
+  color: #6366f1;
+  font-weight: 500;
 }
